@@ -120,7 +120,8 @@ class _AssistantIntroScreenState extends State<AssistantIntroScreen>
                         .min(width * 0.63, height * 0.33)
                         .clamp(210.0, 300.0)
                         .toDouble();
-                    final bubbleWidth = width * 0.41;
+                    final bubbleWidth =
+                        (width * 0.46).clamp(182.0, 220.0).toDouble();
                     final stageHeight =
                         math.min(height * 0.42, 360.0).toDouble();
                     final sectionGap =
@@ -175,11 +176,11 @@ class _AssistantIntroScreenState extends State<AssistantIntroScreen>
                                                 ),
                                               ),
                                               Positioned(
-                                                right: 0,
+                                                right: width * 0.005,
                                                 top: 0,
                                                 child: Transform.translate(
                                                   offset: Offset(
-                                                    0,
+                                                    lerpDouble(10, 0, bubble)!,
                                                     lerpDouble(18, 0, bubble)!,
                                                   ),
                                                   child: Transform.scale(
@@ -369,51 +370,175 @@ class _SpeechBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textSize = (width * 0.080).clamp(14.2, 15.4).toDouble();
+    final horizontalPadding = (width * 0.118).clamp(20.0, 26.0).toDouble();
+    final minHeight = (width * 0.61).clamp(126.0, 152.0).toDouble();
+
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        Container(
+        SizedBox(
           width: width,
-          padding: const EdgeInsets.fromLTRB(22, 20, 20, 24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(44),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.08),
-                blurRadius: 24,
-                offset: const Offset(0, 10),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: minHeight,
+            ),
+            child: CustomPaint(
+              painter: const _ThoughtBubblePainter(),
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  22,
+                  horizontalPadding - 2,
+                  26,
+                ),
+                child: Text(
+                  text,
+                  style: TextStyle(
+                    color: const Color(0xFF151515),
+                    fontSize: textSize,
+                    fontWeight: FontWeight.w500,
+                    height: 1.45,
+                  ),
+                ),
               ),
-            ],
-          ),
-          child: Text(
-            text,
-            style: const TextStyle(
-              color: Color(0xFF151515),
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              height: 1.42,
             ),
           ),
         ),
-        Positioned(
-          left: 28,
-          bottom: -12,
-          child: Transform.rotate(
-            angle: math.pi / 3.3,
-            child: Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-          ),
+        const Positioned(
+          left: 18,
+          bottom: -2,
+          child: _ThoughtCircle(size: 46),
+        ),
+        const Positioned(
+          left: -6,
+          bottom: -22,
+          child: _ThoughtCircle(size: 26),
+        ),
+        const Positioned(
+          left: -24,
+          bottom: -38,
+          child: _ThoughtCircle(size: 15),
         ),
       ],
     );
   }
+}
+
+class _ThoughtCircle extends StatelessWidget {
+  const _ThoughtCircle({
+    required this.size,
+  });
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final strokeWidth = (size * 0.12).clamp(2.4, 5.2).toDouble();
+
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: const Color(0xFF101010),
+          width: strokeWidth,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.16),
+            blurRadius: 18,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ThoughtBubblePainter extends CustomPainter {
+  const _ThoughtBubblePainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    Path bubblePath = Path()
+      ..addOval(
+        Rect.fromCenter(
+          center: Offset(size.width * 0.12, size.height * 0.53),
+          width: size.width * 0.24,
+          height: size.height * 0.36,
+        ),
+      );
+
+    final lobes = <Rect>[
+      Rect.fromCenter(
+        center: Offset(size.width * 0.28, size.height * 0.27),
+        width: size.width * 0.34,
+        height: size.height * 0.28,
+      ),
+      Rect.fromCenter(
+        center: Offset(size.width * 0.52, size.height * 0.17),
+        width: size.width * 0.40,
+        height: size.height * 0.30,
+      ),
+      Rect.fromCenter(
+        center: Offset(size.width * 0.75, size.height * 0.24),
+        width: size.width * 0.34,
+        height: size.height * 0.27,
+      ),
+      Rect.fromCenter(
+        center: Offset(size.width * 0.90, size.height * 0.48),
+        width: size.width * 0.26,
+        height: size.height * 0.38,
+      ),
+      Rect.fromCenter(
+        center: Offset(size.width * 0.80, size.height * 0.72),
+        width: size.width * 0.34,
+        height: size.height * 0.29,
+      ),
+      Rect.fromCenter(
+        center: Offset(size.width * 0.55, size.height * 0.80),
+        width: size.width * 0.38,
+        height: size.height * 0.31,
+      ),
+      Rect.fromCenter(
+        center: Offset(size.width * 0.29, size.height * 0.72),
+        width: size.width * 0.32,
+        height: size.height * 0.27,
+      ),
+    ];
+
+    for (final rect in lobes) {
+      bubblePath = Path.combine(
+        PathOperation.union,
+        bubblePath,
+        Path()..addOval(rect),
+      );
+    }
+
+    canvas.drawShadow(
+      bubblePath,
+      Colors.black.withOpacity(0.18),
+      16,
+      false,
+    );
+
+    final fillPaint = Paint()..color = Colors.white;
+    final strokePaint = Paint()
+      ..color = const Color(0xFF101010)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = (size.shortestSide * 0.040).clamp(5.0, 8.0)
+      ..strokeJoin = StrokeJoin.round
+      ..strokeCap = StrokeCap.round;
+
+    canvas.drawPath(bubblePath, fillPaint);
+    canvas.drawPath(bubblePath, strokePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _ChoiceChip extends StatelessWidget {
