@@ -1,0 +1,79 @@
+{
+  "canvas_size": [
+    2048,
+    2048
+  ],
+  "recommended_layer_order": [
+    "shadow.png",
+    "tail.png",
+    "body_base.png",
+    "left_back_paw.png",
+    "right_back_paw.png",
+    "collar_left.png",
+    "collar_right.png",
+    "tie.png",
+    "head_base.png",
+    "left_ear.png",
+    "right_ear.png",
+    "left_eye_white.png",
+    "right_eye_white.png",
+    "left_iris.png",
+    "right_iris.png",
+    "left_pupil_clean.png",
+    "right_pupil_clean.png",
+    "left_eye_highlights_clean.png",
+    "right_eye_highlights_clean.png",
+    "nose_clean.png",
+    "mouth_smile.png"
+  ],
+  "recommended_pivots": {
+    "tail.png": [
+      1355,
+      1445
+    ],
+    "head_base.png": [
+      1024,
+      1145
+    ],
+    "left_ear.png": [
+      510,
+      720
+    ],
+    "right_ear.png": [
+      1538,
+      720
+    ],
+    "left_eye_white.png": [
+      735,
+      825
+    ],
+    "right_eye_white.png": [
+      1315,
+      825
+    ],
+    "nose_clean.png": [
+      1019,
+      1030
+    ],
+    "mouth_smile.png": [
+      1025,
+      1140
+    ],
+    "left_leg_front.png": [
+      615,
+      1285
+    ],
+    "right_leg_front.png": [
+      1435,
+      1285
+    ],
+    "left_paw_wave.png": [
+      470,
+      1240
+    ],
+    "right_paw_wave.png": [
+      1575,
+      1240
+    ]
+  }
+}
