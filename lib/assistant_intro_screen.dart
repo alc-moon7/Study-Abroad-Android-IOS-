@@ -15,6 +15,8 @@ class _AssistantIntroScreenState extends State<AssistantIntroScreen>
     with TickerProviderStateMixin {
   late final AnimationController _bubbleController;
   late final AnimationController _entryController;
+  late final TextEditingController _answerController;
+  late final FocusNode _answerFocusNode;
 
   final List<_ChoiceChipData> _choices = const [
     _ChoiceChipData(label: 'USA', flag: '\u{1F1FA}\u{1F1F8}'),
@@ -27,6 +29,8 @@ class _AssistantIntroScreenState extends State<AssistantIntroScreen>
   @override
   void initState() {
     super.initState();
+    _answerController = TextEditingController();
+    _answerFocusNode = FocusNode();
     _entryController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 850),
@@ -53,6 +57,8 @@ class _AssistantIntroScreenState extends State<AssistantIntroScreen>
 
   @override
   void dispose() {
+    _answerController.dispose();
+    _answerFocusNode.dispose();
     _entryController.dispose();
     _bubbleController.dispose();
     super.dispose();
@@ -116,132 +122,145 @@ class _AssistantIntroScreenState extends State<AssistantIntroScreen>
                   builder: (context, constraints) {
                     final width = constraints.maxWidth;
                     final height = constraints.maxHeight;
+                    final keyboardVisible =
+                        MediaQuery.viewInsetsOf(context).bottom > 0;
+                    const transitionDuration = Duration(milliseconds: 320);
                     final foxSize = math
-                        .min(width * 0.63, height * 0.33)
-                        .clamp(210.0, 300.0)
+                        .min(
+                          width * (keyboardVisible ? 0.50 : 0.63),
+                          height * (keyboardVisible ? 0.23 : 0.33),
+                        )
+                        .clamp(170.0, 300.0)
                         .toDouble();
                     final bubbleWidth =
-                        (width * 0.56).clamp(220.0, 248.0).toDouble();
-                    final stageHeight =
-                        math.min(height * 0.412, 350.0).toDouble();
+                        (width * (keyboardVisible ? 0.48 : 0.56))
+                            .clamp(194.0, 248.0)
+                            .toDouble();
+                    final stageHeight = keyboardVisible
+                        ? math.min(height * 0.27, 220.0).toDouble()
+                        : math.min(height * 0.36, 300.0).toDouble();
                     final sectionGap =
                         (height * 0.03).clamp(16.0, 24.0).toDouble();
                     final bottomGap =
                         (height * 0.022).clamp(10.0, 18.0).toDouble();
+                    final topBarTop = height * 0.012;
+                    const topBarHeight = 44.0;
+                    final inputDockHeight = keyboardVisible ? 82.0 : 66.0;
+                    final inputDockBottom =
+                        keyboardVisible ? 0.0 : bottomGap + 18.0;
+                    final choicesPanelHeight = keyboardVisible
+                        ? math.min(height * 0.31, 152.0).toDouble()
+                        : math.min(height * 0.20, 164.0).toDouble();
+                    final closedStageTop =
+                        topBarTop + topBarHeight + height * 0.055;
+                    final openChoicesTop = topBarTop + topBarHeight + 14.0;
+                    final openStageTop = math.max(
+                      openChoicesTop + choicesPanelHeight + 12.0,
+                      height -
+                          inputDockBottom -
+                          inputDockHeight -
+                          stageHeight -
+                          12.0,
+                    );
+                    final stageTop =
+                        keyboardVisible ? openStageTop : closedStageTop;
+                    final choicesTop = keyboardVisible
+                        ? openChoicesTop
+                        : stageTop + stageHeight + sectionGap;
 
                     return Padding(
                       padding: EdgeInsets.symmetric(horizontal: width * 0.06),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(height: height * 0.012),
-                          _TopBar(
-                            onBack: () => Navigator.of(context).maybePop(),
-                          ),
-                          SizedBox(height: height * 0.03),
-                          Expanded(
-                            child: AnimatedBuilder(
-                              animation: Listenable.merge([
-                                _entryController,
-                                _bubbleController,
-                              ]),
-                              builder: (context, child) {
-                                final entry = Curves.easeOutCubic.transform(
-                                  _entryController.value,
-                                );
-                                final bubble = Curves.easeOutBack.transform(
-                                  _bubbleController.value,
-                                );
+                      child: AnimatedBuilder(
+                        animation: Listenable.merge([
+                          _entryController,
+                          _bubbleController,
+                        ]),
+                        builder: (context, child) {
+                          final entry = Curves.easeOutCubic.transform(
+                            _entryController.value,
+                          );
+                          final bubble = Curves.easeOutBack.transform(
+                            _bubbleController.value,
+                          );
 
-                                return Opacity(
-                                  opacity: entry,
-                                  child: Transform.translate(
-                                    offset:
-                                        Offset(0, lerpDouble(24, 0, entry)!),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        SizedBox(height: height * 0.02),
-                                        SizedBox(
-                                          height: stageHeight,
-                                          child: Stack(
-                                            clipBehavior: Clip.none,
-                                            children: [
-                                              Positioned(
-                                                left: -35,
-                                                bottom: -26,
-                                                child: _StaticFoxAvatar(
-                                                  size: foxSize,
-                                                ),
-                                              ),
-                                              Positioned(
-                                                right: 5,
-                                                top: -10,
-                                                child: Transform.translate(
-                                                  offset: Offset(
-                                                    lerpDouble(18, 0, bubble)!,
-                                                    lerpDouble(16, 0, bubble)!,
-                                                  ),
-                                                  child: Transform.scale(
-                                                    scale: lerpDouble(
-                                                      0.95,
-                                                      1.0,
-                                                      bubble,
-                                                    )!,
-                                                    alignment:
-                                                        Alignment.bottomLeft,
-                                                    child: _SpeechBubble(
-                                                      width: bubbleWidth,
-                                                      text:
-                                                          "                Hi...!\n     I'm your counselor kaka. An AI assistant.     Which Country would \n    you like to study in?",
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        SizedBox(height: sectionGap),
-                                        Text(
-                                          'POPULAR CHOICES',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: (width * 0.040)
-                                                .clamp(13.0, 15.0)
-                                                .toDouble(),
-                                            letterSpacing: 0.9,
-                                          ),
-                                        ),
-                                        SizedBox(height: height * 0.018),
-                                        Wrap(
-                                          spacing: 14,
-                                          runSpacing: 12,
-                                          children: _choices
-                                              .map(
-                                                (choice) => _ChoiceChip(
-                                                  label: choice.label,
-                                                  flag: choice.flag,
-                                                ),
-                                              )
-                                              .toList(),
-                                        ),
-                                        const Spacer(),
-                                        const _InputDock(),
-                                        SizedBox(height: bottomGap),
-                                        const Center(
-                                          child: _ProgressDots(),
-                                        ),
-                                        SizedBox(height: bottomGap * 0.5),
-                                      ],
+                          return Opacity(
+                            opacity: entry,
+                            child: Transform.translate(
+                              offset: Offset(0, lerpDouble(24, 0, entry)!),
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  Positioned(
+                                    top: topBarTop,
+                                    left: 0,
+                                    right: 0,
+                                    child: _TopBar(
+                                      onBack: () =>
+                                          Navigator.of(context).maybePop(),
                                     ),
                                   ),
-                                );
-                              },
+                                  AnimatedPositioned(
+                                    duration: transitionDuration,
+                                    curve: Curves.easeOutCubic,
+                                    top: choicesTop,
+                                    left: 0,
+                                    right: 0,
+                                    child: _PopularChoicesPanel(
+                                      choices: _choices,
+                                      height: choicesPanelHeight,
+                                      glass: keyboardVisible,
+                                    ),
+                                  ),
+                                  AnimatedPositioned(
+                                    duration: transitionDuration,
+                                    curve: Curves.easeOutCubic,
+                                    top: stageTop,
+                                    left: 0,
+                                    right: 0,
+                                    height: stageHeight,
+                                    child: _AssistantStage(
+                                      foxSize: foxSize,
+                                      bubbleWidth: bubbleWidth,
+                                      bubbleAnimationValue: bubble,
+                                      compact: keyboardVisible,
+                                      text:
+                                          "Hi...!\nI'm your counselor kaka.\nAn AI assistant.\nWhich Country would\nyou like to study in?",
+                                    ),
+                                  ),
+                                  AnimatedPositioned(
+                                    duration: transitionDuration,
+                                    curve: Curves.easeOutCubic,
+                                    left: 0,
+                                    right: 0,
+                                    bottom: inputDockBottom,
+                                    child: _InputDock(
+                                      controller: _answerController,
+                                      focusNode: _answerFocusNode,
+                                      compact: keyboardVisible,
+                                    ),
+                                  ),
+                                  AnimatedPositioned(
+                                    duration: transitionDuration,
+                                    curve: Curves.easeOutCubic,
+                                    left: 0,
+                                    right: 0,
+                                    bottom: keyboardVisible ? -20 : 0,
+                                    child: IgnorePointer(
+                                      ignoring: keyboardVisible,
+                                      child: AnimatedOpacity(
+                                        duration: transitionDuration,
+                                        opacity: keyboardVisible ? 0 : 1,
+                                        child: const Center(
+                                          child: _ProgressDots(),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          );
+                        },
                       ),
                     );
                   },
@@ -359,6 +378,147 @@ class _TopBar extends StatelessWidget {
   }
 }
 
+class _AssistantStage extends StatelessWidget {
+  const _AssistantStage({
+    required this.foxSize,
+    required this.bubbleWidth,
+    required this.bubbleAnimationValue,
+    required this.compact,
+    required this.text,
+  });
+
+  final double foxSize;
+  final double bubbleWidth;
+  final double bubbleAnimationValue;
+  final bool compact;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Positioned(
+          left: compact ? -16 : -35,
+          bottom: compact ? -12 : -26,
+          child: _StaticFoxAvatar(
+            size: foxSize,
+          ),
+        ),
+        Positioned(
+          right: compact ? 0 : 5,
+          top: compact ? 0 : -10,
+          child: Transform.translate(
+            offset: Offset(
+              lerpDouble(18, 0, bubbleAnimationValue)!,
+              lerpDouble(16, 0, bubbleAnimationValue)!,
+            ),
+            child: Transform.scale(
+              scale: lerpDouble(
+                0.95,
+                1.0,
+                bubbleAnimationValue,
+              )!,
+              alignment: Alignment.bottomLeft,
+              child: _SpeechBubble(
+                width: bubbleWidth,
+                text: text,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PopularChoicesPanel extends StatelessWidget {
+  const _PopularChoicesPanel({
+    required this.choices,
+    required this.height,
+    required this.glass,
+  });
+
+  final List<_ChoiceChipData> choices;
+  final double height;
+  final bool glass;
+
+  @override
+  Widget build(BuildContext context) {
+    final titleStyle = TextStyle(
+      color: Colors.white,
+      fontWeight: FontWeight.w700,
+      fontSize: glass ? 12.8 : 14.2,
+      letterSpacing: 0.9,
+    );
+
+    final content = SizedBox(
+      height: height,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(height: glass ? 0 : 8),
+          Text(
+            'POPULAR CHOICES',
+            style: titleStyle,
+          ),
+          SizedBox(height: glass ? 10 : 14),
+          Expanded(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Wrap(
+                spacing: 14,
+                runSpacing: 12,
+                children: choices
+                    .map(
+                      (choice) => _ChoiceChip(
+                        label: choice.label,
+                        flag: choice.flag,
+                      ),
+                    )
+                    .toList(),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (!glass) {
+      return content;
+    }
+
+    return SizedBox(
+      height: height,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(30),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.14),
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.18),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.10),
+                  blurRadius: 18,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: content,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _SpeechBubble extends StatelessWidget {
   const _SpeechBubble({
     required this.width,
@@ -373,8 +533,8 @@ class _SpeechBubble extends StatelessWidget {
     const bubbleAspectRatio = 959 / 662;
     final bubbleHeight = width / bubbleAspectRatio;
 
-    final maxTextSize = (width * 1.8).clamp(14.0, 17.0).toDouble();
-    final minTextSize = (width * 1.8).clamp(10.0, 12.0).toDouble();
+    final maxTextSize = (width * 0.068).clamp(14.0, 17.0).toDouble();
+    final minTextSize = (width * 0.054).clamp(10.0, 12.0).toDouble();
 
     final leftPadding = (width * 0.08).clamp(10.0, 18.0).toDouble();
     final rightPadding = (width * 0.035).clamp(4.0, 10.0).toDouble();
@@ -528,16 +688,27 @@ class _ChoiceChip extends StatelessWidget {
 }
 
 class _InputDock extends StatelessWidget {
-  const _InputDock();
+  const _InputDock({
+    required this.controller,
+    required this.focusNode,
+    required this.compact,
+  });
+
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
+    final minHeight = compact ? 74.0 : 68.0;
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(40),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+          constraints: BoxConstraints(minHeight: minHeight),
+          padding: const EdgeInsets.fromLTRB(18, 12, 14, 12),
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.90),
             borderRadius: BorderRadius.circular(40),
@@ -550,6 +721,7 @@ class _InputDock extends StatelessWidget {
             ],
           ),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
                 width: 34,
@@ -565,16 +737,34 @@ class _InputDock extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
-                  'Type your answer....',
-                  style: TextStyle(
-                    color: Color(0xFF8C8177),
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  focusNode: focusNode,
+                  minLines: 1,
+                  maxLines: compact ? 3 : 2,
+                  keyboardType: TextInputType.multiline,
+                  textCapitalization: TextCapitalization.sentences,
+                  cursorColor: const Color(0xFF8F8376),
+                  style: const TextStyle(
+                    color: Color(0xFF5B5044),
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
+                    height: 1.25,
+                  ),
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    isCollapsed: true,
+                    hintText: 'Type your answer....',
+                    hintStyle: TextStyle(
+                      color: Color(0xFF8C8177),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ),
+              const SizedBox(width: 10),
               Container(
                 width: 38,
                 height: 38,
