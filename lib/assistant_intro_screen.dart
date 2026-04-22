@@ -72,6 +72,7 @@ class _AssistantIntroScreenState extends State<AssistantIntroScreen>
         systemNavigationBarColor: Colors.transparent,
       ),
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         body: DecoratedBox(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -122,51 +123,38 @@ class _AssistantIntroScreenState extends State<AssistantIntroScreen>
                   builder: (context, constraints) {
                     final width = constraints.maxWidth;
                     final height = constraints.maxHeight;
-                    final keyboardVisible =
-                        MediaQuery.viewInsetsOf(context).bottom > 0;
+                    final keyboardInset =
+                        MediaQuery.viewInsetsOf(context).bottom;
+                    final keyboardVisible = keyboardInset > 0;
                     const transitionDuration = Duration(milliseconds: 320);
                     final foxSize = math
-                        .min(
-                          width * (keyboardVisible ? 0.50 : 0.63),
-                          height * (keyboardVisible ? 0.23 : 0.33),
-                        )
-                        .clamp(170.0, 300.0)
+                        .min(width * 0.63, height * 0.33)
+                        .clamp(210.0, 300.0)
                         .toDouble();
                     final bubbleWidth =
-                        (width * (keyboardVisible ? 0.48 : 0.56))
-                            .clamp(194.0, 248.0)
-                            .toDouble();
-                    final stageHeight = keyboardVisible
-                        ? math.min(height * 0.27, 220.0).toDouble()
-                        : math.min(height * 0.36, 300.0).toDouble();
+                        (width * 0.56).clamp(220.0, 248.0).toDouble();
+                    final stageHeight =
+                        math.min(height * 0.36, 300.0).toDouble();
                     final sectionGap =
                         (height * 0.03).clamp(16.0, 24.0).toDouble();
                     final bottomGap =
                         (height * 0.022).clamp(10.0, 18.0).toDouble();
                     final topBarTop = height * 0.012;
                     const topBarHeight = 44.0;
-                    final inputDockHeight = keyboardVisible ? 82.0 : 66.0;
-                    final inputDockBottom =
-                        keyboardVisible ? 0.0 : bottomGap + 18.0;
-                    final choicesPanelHeight = keyboardVisible
-                        ? math.min(height * 0.31, 152.0).toDouble()
-                        : math.min(height * 0.20, 164.0).toDouble();
-                    final closedStageTop =
-                        topBarTop + topBarHeight + height * 0.055;
-                    final openChoicesTop = topBarTop + topBarHeight + 14.0;
-                    final openStageTop = math.max(
-                      openChoicesTop + choicesPanelHeight + 12.0,
-                      height -
-                          inputDockBottom -
-                          inputDockHeight -
-                          stageHeight -
-                          12.0,
+                    final stageTop = topBarTop + topBarHeight + height * 0.055;
+                    final panelTopClosed = stageTop + stageHeight + sectionGap;
+                    final panelBottomClosed = bottomGap + 34.0;
+                    final panelHeightClosed = math.max(
+                        150.0, height - panelTopClosed - panelBottomClosed);
+                    final panelTopOpen = topBarTop + topBarHeight + 10.0;
+                    final panelHeightOpen = math.max(
+                      panelHeightClosed,
+                      height - panelTopOpen - keyboardInset - 12.0,
                     );
-                    final stageTop =
-                        keyboardVisible ? openStageTop : closedStageTop;
-                    final choicesTop = keyboardVisible
-                        ? openChoicesTop
-                        : stageTop + stageHeight + sectionGap;
+                    final panelTop =
+                        keyboardVisible ? panelTopOpen : panelTopClosed;
+                    final panelHeight =
+                        keyboardVisible ? panelHeightOpen : panelHeightClosed;
 
                     return Padding(
                       padding: EdgeInsets.symmetric(horizontal: width * 0.06),
@@ -199,21 +187,7 @@ class _AssistantIntroScreenState extends State<AssistantIntroScreen>
                                           Navigator.of(context).maybePop(),
                                     ),
                                   ),
-                                  AnimatedPositioned(
-                                    duration: transitionDuration,
-                                    curve: Curves.easeOutCubic,
-                                    top: choicesTop,
-                                    left: 0,
-                                    right: 0,
-                                    child: _PopularChoicesPanel(
-                                      choices: _choices,
-                                      height: choicesPanelHeight,
-                                      glass: keyboardVisible,
-                                    ),
-                                  ),
-                                  AnimatedPositioned(
-                                    duration: transitionDuration,
-                                    curve: Curves.easeOutCubic,
+                                  Positioned(
                                     top: stageTop,
                                     left: 0,
                                     right: 0,
@@ -222,21 +196,24 @@ class _AssistantIntroScreenState extends State<AssistantIntroScreen>
                                       foxSize: foxSize,
                                       bubbleWidth: bubbleWidth,
                                       bubbleAnimationValue: bubble,
-                                      compact: keyboardVisible,
+                                      compact: false,
                                       text:
-                                          "Hi...!\nI'm your counselor kaka.\nAn AI assistant.\nWhich Country would\nyou like to study in?",
+                                          "\n                  Hi...!\n   Which Country would\n     you like to study in?",
                                     ),
                                   ),
                                   AnimatedPositioned(
                                     duration: transitionDuration,
                                     curve: Curves.easeOutCubic,
+                                    top: panelTop,
                                     left: 0,
                                     right: 0,
-                                    bottom: inputDockBottom,
-                                    child: _InputDock(
+                                    height: panelHeight,
+                                    child: _PopularChoicesPanel(
+                                      choices: _choices,
+                                      height: panelHeight,
+                                      keyboardVisible: keyboardVisible,
                                       controller: _answerController,
                                       focusNode: _answerFocusNode,
-                                      compact: keyboardVisible,
                                     ),
                                   ),
                                   AnimatedPositioned(
@@ -244,7 +221,8 @@ class _AssistantIntroScreenState extends State<AssistantIntroScreen>
                                     curve: Curves.easeOutCubic,
                                     left: 0,
                                     right: 0,
-                                    bottom: keyboardVisible ? -20 : 0,
+                                    bottom:
+                                        keyboardVisible ? -20 : bottomGap * 0.5,
                                     child: IgnorePointer(
                                       ignoring: keyboardVisible,
                                       child: AnimatedOpacity(
@@ -399,7 +377,7 @@ class _AssistantStage extends StatelessWidget {
       clipBehavior: Clip.none,
       children: [
         Positioned(
-          left: compact ? -16 : -35,
+          left: compact ? -16 : -43,
           bottom: compact ? -12 : -26,
           child: _StaticFoxAvatar(
             size: foxSize,
@@ -436,82 +414,96 @@ class _PopularChoicesPanel extends StatelessWidget {
   const _PopularChoicesPanel({
     required this.choices,
     required this.height,
-    required this.glass,
+    required this.keyboardVisible,
+    required this.controller,
+    required this.focusNode,
   });
 
   final List<_ChoiceChipData> choices;
   final double height;
-  final bool glass;
+  final bool keyboardVisible;
+  final TextEditingController controller;
+  final FocusNode focusNode;
 
   @override
   Widget build(BuildContext context) {
     final titleStyle = TextStyle(
       color: Colors.white,
       fontWeight: FontWeight.w700,
-      fontSize: glass ? 12.8 : 14.2,
+      fontSize: keyboardVisible ? 12.8 : 14.2,
       letterSpacing: 0.9,
     );
-
-    final content = SizedBox(
-      height: height,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(height: glass ? 0 : 8),
-          Text(
-            'POPULAR CHOICES',
-            style: titleStyle,
-          ),
-          SizedBox(height: glass ? 10 : 14),
-          Expanded(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Wrap(
-                spacing: 14,
-                runSpacing: 12,
-                children: choices
-                    .map(
-                      (choice) => _ChoiceChip(
-                        label: choice.label,
-                        flag: choice.flag,
-                      ),
-                    )
-                    .toList(),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    if (!glass) {
-      return content;
-    }
+    final cardRadius = BorderRadius.circular(30);
+    const cardPadding = EdgeInsets.fromLTRB(18, 16, 18, 14);
 
     return SizedBox(
       height: height,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: cardRadius,
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+          filter: ImageFilter.blur(
+            sigmaX: keyboardVisible ? 18 : 0,
+            sigmaY: keyboardVisible ? 18 : 0,
+          ),
           child: Container(
-            padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+            padding: cardPadding,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.14),
-              borderRadius: BorderRadius.circular(30),
+              color: keyboardVisible
+                  ? Colors.white.withOpacity(0.14)
+                  : Colors.transparent,
+              borderRadius: cardRadius,
               border: Border.all(
-                color: Colors.white.withOpacity(0.18),
+                color: keyboardVisible
+                    ? Colors.white.withOpacity(0.18)
+                    : Colors.transparent,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.10),
-                  blurRadius: 18,
-                  offset: const Offset(0, 10),
+              boxShadow: keyboardVisible
+                  ? [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.10),
+                        blurRadius: 18,
+                        offset: const Offset(0, 10),
+                      ),
+                    ]
+                  : const [],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AnimatedPadding(
+                  duration: const Duration(milliseconds: 320),
+                  curve: Curves.easeOutCubic,
+                  padding: EdgeInsets.only(top: keyboardVisible ? 0 : 6),
+                  child: Text(
+                    'POPULAR CHOICES',
+                    style: titleStyle,
+                  ),
+                ),
+                SizedBox(height: keyboardVisible ? 8 : 12),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.topLeft,
+                    child: Wrap(
+                      spacing: 14,
+                      runSpacing: 12,
+                      children: choices
+                          .map(
+                            (choice) => _ChoiceChip(
+                              label: choice.label,
+                              flag: choice.flag,
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _InputDock(
+                  controller: controller,
+                  focusNode: focusNode,
                 ),
               ],
             ),
-            child: content,
           ),
         ),
       ),
@@ -691,23 +683,21 @@ class _InputDock extends StatelessWidget {
   const _InputDock({
     required this.controller,
     required this.focusNode,
-    required this.compact,
   });
 
   final TextEditingController controller;
   final FocusNode focusNode;
-  final bool compact;
 
   @override
   Widget build(BuildContext context) {
-    final minHeight = compact ? 74.0 : 68.0;
+    const minHeight = 68.0;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(40),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          constraints: BoxConstraints(minHeight: minHeight),
+          child: Container(
+            constraints: const BoxConstraints(minHeight: minHeight),
           padding: const EdgeInsets.fromLTRB(18, 12, 14, 12),
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.90),
@@ -742,7 +732,7 @@ class _InputDock extends StatelessWidget {
                   controller: controller,
                   focusNode: focusNode,
                   minLines: 1,
-                  maxLines: compact ? 3 : 2,
+                  maxLines: 2,
                   keyboardType: TextInputType.multiline,
                   textCapitalization: TextCapitalization.sentences,
                   cursorColor: const Color(0xFF8F8376),
