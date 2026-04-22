@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'assistant_question_screen.dart';
+import 'university_list.dart';
 
 class AssistantQualificationIntroScreen extends StatelessWidget {
   const AssistantQualificationIntroScreen({super.key});
@@ -28,18 +29,28 @@ class AssistantQualificationIntroScreen extends StatelessWidget {
     ),
   ];
 
-  static Future<void> _stayHere(BuildContext context, String? answer) async {
+  static Future<void> _goToUniversityList(
+    BuildContext context,
+    String? answer,
+  ) async {
     FocusScope.of(context).unfocus();
+    await Navigator.of(context).push(
+      buildAssistantFlowRoute(
+        const UniversityListScreen(),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return const AssistantQuestionScreen(
-      questionText: "\n\n       What is your current\n             qualification?",
+      questionText:
+          "\n\n       What is your current\n             qualification?",
       choices: _choices,
       stepIndex: 2,
       totalSteps: 3,
-      onSkip: _stayHere,
+      onNext: _goToUniversityList,
+      onSkip: _goToUniversityList,
     );
   }
 }

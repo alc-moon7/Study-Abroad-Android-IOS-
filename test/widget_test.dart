@@ -5,6 +5,7 @@ import 'package:study_abroad_app/assistant_intro_screen.dart';
 import 'package:study_abroad_app/assistant_budget_intro_screen.dart';
 import 'package:study_abroad_app/assistant_qualification_intro_screen.dart';
 import 'package:study_abroad_app/main.dart';
+import 'package:study_abroad_app/university_list.dart';
 
 void main() {
   testWidgets('Splash screen renders branded copy',
@@ -39,7 +40,8 @@ void main() {
     expect(find.text('Type your answer....'), findsOneWidget);
   });
 
-  testWidgets('Assistant flow routes through budget and qualification pages',
+  testWidgets(
+      'Assistant flow routes through budget, qualification and university list pages',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(390, 844);
     tester.view.devicePixelRatio = 1.0;
@@ -65,5 +67,12 @@ void main() {
 
     expect(find.byType(AssistantQualificationIntroScreen), findsOneWidget);
     expect(find.text("Bachelor's"), findsOneWidget);
+
+    await tester.tap(find.text('Skip'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(UniversityListScreen), findsOneWidget);
+    expect(find.text('Explore Universities'), findsOneWidget);
+    expect(find.text('Harvard University'), findsOneWidget);
   });
 }
